@@ -8,7 +8,9 @@ vector<vector<double>> diagonal_matr;
 vector<vector<double>> laplacian;
 vector<double> eigvalues;
 vector<vector<double>> eigvectors;
+vector<pair<double,vector<double>>> eig_pairs;
 int k=2;
+
 
 void populateAffinity()
 {
@@ -48,33 +50,49 @@ void populateDiagonal()
 
 void printMatrices()
 {
+	cout<<"Affinity matrix: \n";
 	for(int i=0;i<points.size();i++)
 	{
 		for(int j=0;j<points.size();j++)
 			cout<<affinity[i][j]<<" ";
 		cout<<endl;
 	}
+	cout<<"Diagonal matrix: \n";
 	for(int i=0;i<diagonal_matr.size();i++)
 	{
 		for(int j=0;j<diagonal_matr[i].size();j++)
 			cout<<diagonal_matr[i][j]<<" ";
 		cout<<endl;
 	}
+	cout<<"Laplacian matrix: \n";
 	for(int i=0;i<laplacian.size();i++)
 	{
 		for(int j=0;j<laplacian[i].size();j++)
 			cout<<laplacian[i][j]<<" ";
 		cout<<endl;
 	}
+}
 
+void printEigen()
+{
+	cout<<"Eigen values are: \n";
 	for(int i=0;i<eigvalues.size();i++)
 		cout<<eigvalues[i]<<" ";
 	cout<<endl;
 
+	cout<<"Eigen vectors are: \n";
 	for(int i=0;i<eigvectors.size();i++)
 	{
 		for(int j=0;j<eigvectors[i].size();j++)
 			cout<<eigvectors[i][j]<<" ";
+		cout<<endl;
+	}
+
+	cout<<"K largest eigen vectors are: \n";
+	for(int i=0;i<k;i++)
+	{
+		for(int j=0;j<eig_pairs[i].second.size();j++)
+			cout<<eig_pairs[i].second[j]<<" ";
 		cout<<endl;
 	}
 }
@@ -93,7 +111,7 @@ void populateLaplacian()
 	}
 }
 
-void extractEigenVectors()
+void getEigenVectors()
 {
 	const int n=laplacian.size();
 	// Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A;
@@ -111,14 +129,25 @@ void extractEigenVectors()
 	for(int i=0;i<n;i++)
 		eigvalues.push_back(real(s.eigenvalues()(i)));
 	
-	// for(int i=0;i<n;i++)
-	// {
-	// 	vector<double> temp;
-	// 	for(int j=0;j<n;j++)
-	// 		temp.push_back(real(s.eigenvectors(j,i)));
+	// cout<<s.eigenvectors()<<endl;
+	// cout<<s.eigenvectors().shape();
 
-	// 	eigvectors.push_back(temp);
-	// }
+	for(int i=0;i<n;i++)
+	{
+		vector<double> temp;
+		for(int j=0;j<n;j++)
+			temp.push_back(real(s.eigenvectors().col(i)(j)));
+
+		eigvectors.push_back(temp);
+	}
+}
+
+void extractKeigen()
+{
+	eig_pairs.clear();
+	for(int i=0;i<eigvalues.size();i++)
+		eig_pairs.push_back({abs(eigvalues[i]),eigvectors[i]});
+	sort(eig_pairs.rbegin(),eig_pairs.rend());
 }
 
 int main()
@@ -127,8 +156,12 @@ int main()
 	populateAffinity();
 	populateDiagonal();
 	populateLaplacian();
-	extractEigenVectors();
 	printMatrices();
+
+	getEigenVectors();
+	extractKeigen();
+	printEigen();
+
 	return 0;
 }
 

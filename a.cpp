@@ -1,5 +1,6 @@
 #include<bits/stdc++.h>
-#include <eigen3/Eigen/Eigenvalues>
+#include"kmeans.cpp"								/* used an implementation provided by https://github.com/aditya1601/kmeans-clustering-cpp.git*/
+#include<eigen3/Eigen/Eigenvalues>					/* eigen3 lib installed using sudo apt-get install libeigen3-dev */
 using namespace std;
 
 vector< vector <double>> affinity;
@@ -8,10 +9,25 @@ vector<vector<double>> diagonal_matr;
 vector<vector<double>> laplacian;
 vector<double> eigvalues;
 vector<vector<double>> eigvectors;
-vector<pair<double,vector<double>>> eig_pairs;
+vector<pair<double,vector<double>>> eig_pairs;		/* stores eigenvalue and it's correspongding eigenvector */
 int k=2;
 
 
+// class NJW
+// {
+// public:
+// 	vector< vector <double>> affinity;
+// 	vector<vector<int>> points;
+// 	vector<vector<double>> diagonal_matr;
+// 	vector<vector<double>> laplacian;
+// 	vector<double> eigvalues;
+// 	vector<vector<double>> eigvectors;
+// 	vector<pair<double,vector<double>>> eig_pairs;
+// 	int k=2;
+
+	
+// };
+/* calculates the affinity between data points */
 void populateAffinity()
 {
 	int n=points.size();
@@ -32,6 +48,7 @@ void populateAffinity()
 	}
 }
 
+/* computes the diagonal matrix */
 void populateDiagonal()
 {
 	int n=points.size();
@@ -97,6 +114,7 @@ void printEigen()
 	}
 }
 
+/* calculates the laplacian, L=D^(-1/2)AD^(1/2) */
 void populateLaplacian()
 {
 	int n=points.size();
@@ -111,9 +129,10 @@ void populateLaplacian()
 	}
 }
 
+/* calculates all eigen values and eigen vectors of laplacian */
 void getEigenVectors()
 {
-	const int n=laplacian.size();
+	int n=laplacian.size();
 	// Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A;
 	Eigen::MatrixXd A(5,5);
 	A.resize(n, n);
@@ -142,7 +161,8 @@ void getEigenVectors()
 	}
 }
 
-void extractKeigen()
+/* sort eigenvectors according to eigen values */
+void sortEigen()
 {
 	eig_pairs.clear();
 	for(int i=0;i<eigvalues.size();i++)
@@ -150,17 +170,54 @@ void extractKeigen()
 	sort(eig_pairs.rbegin(),eig_pairs.rend());
 }
 
+void kmeans_aux()
+{
+	vector<vector<double>> Y;
+	int n=laplacian.size();
+	for(int i=0;i<n;i++)
+	{
+		vector<double> temp;
+		for(int j=0;j<k;j++)
+			temp.push_back(eig_pairs[j].second[i]);
+		
+		double sq_sum=0;
+		for(int j=0;j<temp.size();j++)
+			sq_sum+=pow(temp[j],2);
+		sq_sum=sqrt(sq_sum);
+		for(int j=0;j<temp.size();j++)
+			temp[j]/=sq_sum;
+
+		Y.push_back(temp);
+	}
+
+	int pointId = 1;
+	vector<Point> all_points;
+	
+	for(int i=0;i<Y.size();i++)
+	{
+	    Point point(pointId, Y[i]);
+        all_points.push_back(point);
+        pointId++;
+	}
+
+	int iters = 100;
+
+    KMeans kmeans(k, iters);
+    kmeans.run(all_points);
+}
+
 int main()
 {
-	points= { {0,1},{1,2},{2,3},{3,4},{4,5} };
+	points= { {0,1},{1,2},{2,3},{38,48},{48,58} };
 	populateAffinity();
 	populateDiagonal();
 	populateLaplacian();
 	printMatrices();
 
 	getEigenVectors();
-	extractKeigen();
+	sortEigen();
 	printEigen();
+	kmeans_aux();
 
 	return 0;
 }

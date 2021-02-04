@@ -5,7 +5,7 @@ using namespace std;
 
 class NJW
 {
-public:
+private:
 	vector< vector <double>> affinity;
 	vector<vector<double>> points;
 	vector<vector<double>> diagonal_matr;
@@ -13,9 +13,9 @@ public:
 	vector<double> eigvalues;
 	vector<vector<double>> eigvectors;
 	vector<pair<double,vector<double>>> eig_pairs; /* stores eigenvalue and it's correspongding eigenvector */
-
 	int k=2;
 
+public:
 	NJW(vector<vector<double> >v)
 	{
 		points = v;
@@ -188,13 +188,38 @@ public:
 		
 		for(int i=0;i<Y.size();i++)
 		{
-		    Point point(pointId, Y[i]);
-	        all_points.push_back(point);
-	        pointId++;
+			Point point(pointId, Y[i]);
+			all_points.push_back(point);
+			pointId++;
 	    }
 
 	    KMeans kmeans(k, iters);
-	    kmeans.run(all_points);
+	    vector<Cluster> clusters = kmeans.run(all_points);
+
+	    
+
+	    ofstream myfile;
+        myfile.open("output.csv");
+        myfile << "x,y,c" << endl;
+
+        for(int i=0; i<k; i++)
+        {
+            // cout<<"Points in cluster "<<clusters[i].getId()<<" : ";
+            for(int j=0; j<clusters[i].getSize(); j++)
+            {
+            	for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
+            	{
+            		myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
+            	}
+                myfile << clusters[i].getId() << endl;
+            }
+        }
+
+        // for(int i=0;i<) 
+        // {
+        //     myfile << it->x << "," << it->y << "," << it->cluster << endl;
+        // }
+        myfile.close();
 	}
 };
 

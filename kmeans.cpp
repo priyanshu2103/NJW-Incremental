@@ -144,7 +144,7 @@ public:
         this->iters = iterations;
     }
 
-    void run(vector<Point>& all_points){
+    vector<Cluster> run(vector<Point>& all_points){
 
         total_points = all_points.size();
         dimensions = all_points[0].getDimensions();
@@ -260,6 +260,6 @@ public:
         else{
             cout<<"Error: Unable to write to clusters.txt";
         }
-
+        return clusters;
     }
 };

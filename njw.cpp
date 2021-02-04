@@ -13,7 +13,7 @@ private:
 	vector<double> eigvalues;
 	vector<vector<double>> eigvectors;
 	vector<pair<double,vector<double>>> eig_pairs; /* stores eigenvalue and it's correspongding eigenvector */
-	int k=2;
+	int k;
 
 public:
 	NJW(vector<vector<double> >v)
@@ -223,13 +223,49 @@ public:
 	}
 };
 
-// vector<vector<double> > getPoints;
-
-int main()
+int main(int argc, char **argv)
 {
-	vector<vector<double> > points= { {0,1},{1,2},{2,3},{38,48},{48,58} };
+	//Need 2 arguments (except filename) to run, else exit
+    if(argc != 3){
+        cout<<"Error: command-line argument count mismatch.";
+        return 1;
+    }
+
+    //Fetching number of clusters
+    int K = atoi(argv[2]);
+
+    //Open file for fetching points
+    string filename = argv[1];
+    ifstream infile(filename.c_str());
+
+    if(!infile.is_open()){
+        cout<<"Error: Failed to open file."<<endl;
+        return 1;
+    }
+
+    vector<vector<double> > points;
+    //Fetching points from file
+    string line;
+
+    while(getline(infile, line))
+    {
+    	if(line=="") break;
+    	vector<double> vec;
+        stringstream is(line);
+        double val;
+        while(is >> val)
+        {
+            vec.push_back(val);
+        }
+        points.push_back(vec);
+    }
+    infile.close();
+    cout<<"\nData fetched successfully!"<<endl<<endl;
+
+	// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
 	NJW *njw = new NJW(points);
 	
+	njw->k = K;
 	njw->populateAffinity();
 	njw->populateDiagonal();
 	njw->populateLaplacian();

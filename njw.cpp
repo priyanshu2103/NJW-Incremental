@@ -16,9 +16,10 @@ private:
 	int k;
 
 public:
-	NJW(vector<vector<double> >v)
+	NJW(vector<vector<double> >v, int K)
 	{
 		points = v;
+		k = K;
 	}
 	/* calculates the affinity between data points */
 	void populateAffinity()
@@ -263,9 +264,8 @@ int main(int argc, char **argv)
     cout<<"\nData fetched successfully!"<<endl<<endl;
 
 	// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
-	NJW *njw = new NJW(points);
+	NJW *njw = new NJW(points, K);
 	
-	njw->k = K;
 	njw->populateAffinity();
 	njw->populateDiagonal();
 	njw->populateLaplacian();

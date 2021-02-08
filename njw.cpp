@@ -24,6 +24,9 @@ public:
 	/* calculates the affinity between data points */
 	void populateAffinity()
 	{
+		clock_t start, end;
+		start=clock();
+
 		int n=points.size();
 		affinity.resize(n);
 		for(int i=0;i<n;i++)
@@ -40,11 +43,18 @@ public:
 			}
 			affinity[i][i]=0;
 		}
+
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to calculate affinity matrix: "<<time_taken<<" sec\n";
 	}
 
 	/* computes the diagonal matrix */
 	void populateDiagonal()
 	{
+		clock_t start, end;
+		start=clock();
+
 		int n=points.size();
 		diagonal_matr.resize(n);
 		for(int i=0;i<n;i++)
@@ -57,6 +67,32 @@ public:
 				sum+=affinity[i][j];
 			diagonal_matr[i][i]=sum;
 		}
+
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to calculate diagonal matrix: "<<time_taken<<" sec\n";
+	}
+
+	/* calculates the laplacian, L=D^(-1/2)AD^(1/2) */
+	void populateLaplacian()
+	{
+		clock_t start, end;
+		start=clock();
+
+		int n=points.size();
+		laplacian.resize(n);
+		for(int i=0;i<n;i++)
+			laplacian[i].resize(n,0);
+
+		for(int i=0;i<n;i++)
+		{
+			for(int j=0;j<n;j++)
+				laplacian[i][j]=affinity[i][j]/(sqrt(diagonal_matr[i][i] * diagonal_matr[j][j]));
+		}
+
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to calculate laplacian matrix: "<<time_taken<<" sec\n";
 	}
 
 	void printMatrices()
@@ -108,24 +144,12 @@ public:
 		}
 	}
 
-	/* calculates the laplacian, L=D^(-1/2)AD^(1/2) */
-	void populateLaplacian()
-	{
-		int n=points.size();
-		laplacian.resize(n);
-		for(int i=0;i<n;i++)
-			laplacian[i].resize(n,0);
-
-		for(int i=0;i<n;i++)
-		{
-			for(int j=0;j<n;j++)
-				laplacian[i][j]=affinity[i][j]/(sqrt(diagonal_matr[i][i] * diagonal_matr[j][j]));
-		}
-	}
-
 	/* calculates all eigen values and eigen vectors of laplacian */
 	void getEigenVectors()
 	{
+		clock_t start, end;
+		start=clock();
+
 		int n=laplacian.size();
 		// Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A;
 		Eigen::MatrixXd A(5,5);
@@ -153,19 +177,33 @@ public:
 
 			eigvectors.push_back(temp);
 		}
+
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to calculate eigenvalues and eigenvectors: "<<time_taken<<" sec\n";
 	}
 
 	/* sort eigenvectors according to eigen values */
 	void sortEigen()
 	{
+		clock_t start, end;
+		start=clock();
+
 		eig_pairs.clear();
 		for(int i=0;i<eigvalues.size();i++)
 			eig_pairs.push_back({abs(eigvalues[i]),eigvectors[i]});
 		sort(eig_pairs.rbegin(),eig_pairs.rend());
+
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to sort eigenvectors: "<<time_taken<<" sec\n";
 	}
 
 	void kmeans_aux(int iters)
 	{
+		clock_t start, end;
+		start=clock();
+
 		vector<vector<double>> Y;
 		int n=laplacian.size();
 		for(int i=0;i<n;i++)
@@ -221,11 +259,17 @@ public:
         //     myfile << it->x << "," << it->y << "," << it->cluster << endl;
         // }
         myfile.close();
+
+        end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		cout<<"Time taken to do K-means clustering: "<<time_taken<<" sec\n";
 	}
 };
 
 int main(int argc, char **argv)
 {
+	clock_t start, end;
+	start=clock();
 	//Need 2 arguments (except filename) to run, else exit
     if(argc != 3){
         cout<<"Error: command-line argument count mismatch.";
@@ -275,6 +319,10 @@ int main(int argc, char **argv)
 	njw->sortEigen();
 	njw->printEigen();
 	njw->kmeans_aux(100);
+
+	end=clock();
+	double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+	cout<<"Time taken to run complete code: "<<time_taken<<" sec\n";
 
 	return 0;
 }

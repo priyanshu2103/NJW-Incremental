@@ -50,7 +50,27 @@ public:
 		for(int i=0;i<n;i++)
 			affinity[i].resize(n,0);
 
+		vector<double> mean(dim, 0);
+		vector<double> maxs(dim, INT_MIN);
 
+		for(int i=0;i<n;i++)
+		{
+			for(int l=0;l<dim;l++)
+			{
+				mean[l] += points[i][l]/n;
+				maxs[l] = max(maxs[l], points[i][l]);
+			}
+		}
+
+		for(int i=0;i<n;i++)
+		{
+			for(int l=0;l<dim;l++)
+			{
+				points[i][l] -= mean[l];
+				points[i][l] /= maxs[l]; 
+			}
+		}
+		
 		vector<double >sigma(n);
 		for(int i=0;i<points.size();i++)
 		{

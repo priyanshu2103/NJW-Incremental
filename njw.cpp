@@ -50,31 +50,61 @@ public:
 		for(int i=0;i<n;i++)
 			affinity[i].resize(n,0);
 
-		vector<double> mean(dim, 0);
-		vector<double> maxs(dim, -1);
+		// vector<double> mean(dim, 0);
+		// vector<double> maxs(dim, -1);
 
-		for(int i=0;i<n;i++)
-		{
-			for(int l=0;l<dim;l++)
-			{
-				mean[l] += points[i][l]/n;
-				maxs[l] = max(maxs[l], points[i][l]);
-			}
-		}
+		// for(int i=0;i<n;i++)
+		// {
+		// 	for(int l=0;l<dim;l++)
+		// 	{
+		// 		mean[l] += points[i][l]/n;
+		// 		maxs[l] = max(maxs[l], points[i][l]);
+		// 	}
+		// }
 
-		for(int i=0;i<n;i++)
-		{
-			for(int l=0;l<dim;l++)
-			{
-				points[i][l] -= mean[l];
-				points[i][l] /= maxs[l]; 
-			}
-		}
+		// for(int i=0;i<n;i++)
+		// {
+		// 	for(int l=0;l<dim;l++)
+		// 	{
+		// 		points[i][l] -= mean[l];
+		// 		points[i][l] /= maxs[l]; 
+		// 	}
+		// }
 
-		vector<double >sigma(n);
+		// vector<double >sigma(n);
+		// for(int i=0;i<points.size();i++)
+		// {
+		// 	priority_queue<double, vector<double>, greater<double> > pq;  
+		// 	for(int j=0;j<points.size();j++)
+		// 	{
+		// 		double dist = 0;
+		// 		for(int l=0;l<dim;l++)
+		// 		{
+		// 			dist += pow(points[i][l]-points[j][l],2);
+		// 		}
+		// 		affinity[i][j]=dist;
+		// 		pq.push(dist);
+		// 	}
+		// 	affinity[i][i]=0;
+		// 	double si = 0;
+		// 	for(int l=0;l<k;l++)
+		// 	{
+		// 		si += sqrt(pq.top());
+		// 		pq.pop();
+		// 	}
+
+		// 	si /= k;
+		// 	sigma[i] = si;
+		// }
+
+		// for(int i=0;i<n;i++)
+		// {
+		// 	cout<<sigma[i]<<endl;
+		// }
+		// printMatrices();
+		double sigma=1;
 		for(int i=0;i<points.size();i++)
 		{
-			priority_queue<double, vector<double>, greater<double> > pq;  
 			for(int j=0;j<points.size();j++)
 			{
 				double dist = 0;
@@ -82,32 +112,13 @@ public:
 				{
 					dist += pow(points[i][l]-points[j][l],2);
 				}
-				affinity[i][j]=dist;
-				pq.push(dist);
-			}
-			affinity[i][i]=0;
-			double si = 0;
-			for(int l=0;l<k;l++)
-			{
-				si += pq.top();
-				pq.pop();
-			}
-
-			si /= k;
-			sigma[i] = si;
-		}
-
-
-		// double sigma=1;
-		for(int i=0;i<points.size();i++)
-		{
-			for(int j=0;j<points.size();j++)
-			{
-				affinity[i][j] = exp(-affinity[i][j] / (sigma[i]*sigma[j]));
+				// affinity[i][j]=dist;
+				affinity[i][j] = exp(-dist / (2*sigma*sigma));
 			}
 			affinity[i][i]=0;
 		}
 
+		printMatrices();
 		end=clock();
 		affinity_time = double(end-start)/double(CLOCKS_PER_SEC);
 		// cout<<"Time taken to calculate affinity matrix: "<<time_taken<<" sec\n";
@@ -179,41 +190,41 @@ public:
 		}
 		outfile.close();
 
-		cout<<"Diagonal matrix: \n";
-		for(int i=0;i<diagonal_matr.size();i++)
-		{
-			for(int j=0;j<diagonal_matr[i].size();j++)
-				cout<<diagonal_matr[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Diagonal matrix: \n";
+		// for(int i=0;i<diagonal_matr.size();i++)
+		// {
+		// 	for(int j=0;j<diagonal_matr[i].size();j++)
+		// 		cout<<diagonal_matr[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
-		outfile.open("diagonal.txt");
-		outfile<<"Diagonal matrix: \n";
-		for(int i=0;i<diagonal_matr.size();i++)
-		{
-			for(int j=0;j<diagonal_matr[i].size();j++)
-				outfile<<diagonal_matr[i][j]<<" ";
-			outfile<<endl;
-		}
-		outfile.close();
+		// outfile.open("diagonal.txt");
+		// outfile<<"Diagonal matrix: \n";
+		// for(int i=0;i<diagonal_matr.size();i++)
+		// {
+		// 	for(int j=0;j<diagonal_matr[i].size();j++)
+		// 		outfile<<diagonal_matr[i][j]<<" ";
+		// 	outfile<<endl;
+		// }
+		// outfile.close();
 
-		cout<<"Laplacian matrix: \n";
-		for(int i=0;i<laplacian.size();i++)
-		{
-			for(int j=0;j<laplacian[i].size();j++)
-				cout<<laplacian[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Laplacian matrix: \n";
+		// for(int i=0;i<laplacian.size();i++)
+		// {
+		// 	for(int j=0;j<laplacian[i].size();j++)
+		// 		cout<<laplacian[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
-		outfile.open("laplacian.txt");
-		outfile<<"Laplacian matrix: \n";
-		for(int i=0;i<laplacian.size();i++)
-		{
-			for(int j=0;j<laplacian[i].size();j++)
-				outfile<<laplacian[i][j]<<" ";
-			outfile<<endl;
-		}
-		outfile.close();
+		// outfile.open("laplacian.txt");
+		// outfile<<"Laplacian matrix: \n";
+		// for(int i=0;i<laplacian.size();i++)
+		// {
+		// 	for(int j=0;j<laplacian[i].size();j++)
+		// 		outfile<<laplacian[i][j]<<" ";
+		// 	outfile<<endl;
+		// }
+		// outfile.close();
 	}
 
 	void printEigen()
@@ -458,11 +469,11 @@ int main(int argc, char **argv)
 	njw->populateAffinity();
 	njw->populateDiagonal();
 	njw->populateLaplacian();
-	njw->printMatrices();
+	// njw->printMatrices();
 
 	njw->getEigenVectors();
 	njw->sortEigen();
-	njw->printEigen();
+	// njw->printEigen();
 	njw->kmeans_aux(100);
 
 	end=clock();

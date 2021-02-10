@@ -14,6 +14,7 @@ private:
 	vector<vector<double>> eigvectors;
 	vector<pair<double,vector<double>>> eig_pairs; /* stores eigenvalue and it's correspongding eigenvector */
 	int k;
+	int dim;
 	double affinity_time;
 	double laplacian_time;
 	double diagonal_time;
@@ -22,10 +23,21 @@ private:
 	double kmeans_time;
 
 public:
-	NJW(vector<vector<double> >v, int K)
+	NJW(vector<vector<double> >v, int K, int d)
 	{
 		points = v;
 		k = K;
+		dim = d; // initial setting
+	}
+
+	void setDimension(int d)
+	{
+		dim = d;
+	}
+
+	int getDimension()
+	{
+		return dim;
 	}
 	/* calculates the affinity between data points */
 	void populateAffinity()
@@ -38,14 +50,40 @@ public:
 		for(int i=0;i<n;i++)
 			affinity[i].resize(n,0);
 
-		double sigma=1;
+
+		vector<double >sigma(n);
+		for(int i=0;i<points.size();i++)
+		{
+			priority_queue<double, vector<double>, greater<double> > pq;  
+			for(int j=0;j<points.size();j++)
+			{
+				double dist = 0;
+				for(int l=0;l<dim;l++)
+				{
+					dist += pow(points[i][l]-points[j][l],2);
+				}
+				affinity[i][j]=dist;
+				pq.push(dist);
+			}
+			affinity[i][i]=0;
+			double si = 0;
+			for(int l=0;l<k;l++)
+			{
+				si += pq.top();
+				pq.pop();
+			}
+
+			si /= k;
+			sigma[i] = si;
+		}
+
+
+		// double sigma=1;
 		for(int i=0;i<points.size();i++)
 		{
 			for(int j=0;j<points.size();j++)
 			{
-				double dist=pow(points[i][0]-points[j][0],2)+pow(points[i][1]-points[j][1],2);
-				double aff=exp(-dist/(2*pow(sigma,2))); 			// sigma taken 1
-				affinity[i][j]=aff;
+				affinity[i][j] /= (sigma[i]*sigma[j]);
 			}
 			affinity[i][i]=0;
 		}
@@ -377,6 +415,7 @@ int main(int argc, char **argv)
     //Fetching points from file
     string line;
 
+    int d;
     while(getline(infile, line))
     {
     	if(line=="") break;
@@ -388,12 +427,13 @@ int main(int argc, char **argv)
             vec.push_back(val);
         }
         points.push_back(vec);
+        d = vec.size();
     }
     infile.close();
     cout<<"\nData fetched successfully!"<<endl<<endl;
 
 	// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
-	NJW *njw = new NJW(points, K);
+	NJW *njw = new NJW(points, K, d);
 	
 	njw->populateAffinity();
 	njw->populateDiagonal();

@@ -103,7 +103,7 @@ public:
 		{
 			for(int j=0;j<points.size();j++)
 			{
-				affinity[i][j] = exp(-affinity[i][j]) / (sigma[i]*sigma[j]);
+				affinity[i][j] = exp(-affinity[i][j] / (sigma[i]*sigma[j]));
 			}
 			affinity[i][i]=0;
 		}

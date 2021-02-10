@@ -1,0 +1,7 @@
+Time taken to calculate affinity matrix: 0.001289 sec
+Time taken to calculate diagonal matrix: 0.000341 sec
+Time taken to calculate laplacian matrix: 0.000583 sec
+Time taken to calculate eigenvalues and eigenvectors: 10.0544 sec
+Time taken to sort eigenvectors: 7.5e-05 sec
+Time taken to do K-means clustering: 0.001092 sec
+Time taken to run complete code: 10.2124 sec

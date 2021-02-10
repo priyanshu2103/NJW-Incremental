@@ -14,6 +14,12 @@ private:
 	vector<vector<double>> eigvectors;
 	vector<pair<double,vector<double>>> eig_pairs; /* stores eigenvalue and it's correspongding eigenvector */
 	int k;
+	double affinity_time;
+	double laplacian_time;
+	double diagonal_time;
+	double eigen_time;
+	double eigen_sort_time;
+	double kmeans_time;
 
 public:
 	NJW(vector<vector<double> >v, int K)
@@ -45,8 +51,8 @@ public:
 		}
 
 		end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to calculate affinity matrix: "<<time_taken<<" sec\n";
+		affinity_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to calculate affinity matrix: "<<time_taken<<" sec\n";
 	}
 
 	/* computes the diagonal matrix */
@@ -69,8 +75,8 @@ public:
 		}
 
 		end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to calculate diagonal matrix: "<<time_taken<<" sec\n";
+		diagonal_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to calculate diagonal matrix: "<<time_taken<<" sec\n";
 	}
 
 	/* calculates the laplacian, L=D^(-1/2)AD^(1/2) */
@@ -91,8 +97,8 @@ public:
 		}
 
 		end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to calculate laplacian matrix: "<<time_taken<<" sec\n";
+		laplacian_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to calculate laplacian matrix: "<<time_taken<<" sec\n";
 	}
 
 	void printMatrices()
@@ -104,6 +110,17 @@ public:
 				cout<<affinity[i][j]<<" ";
 			cout<<endl;
 		}
+		ofstream outfile;
+		outfile.open("affinity.txt");
+		outfile<<"Affinity matrix: \n";
+		for(int i=0;i<points.size();i++)
+		{
+			for(int j=0;j<points.size();j++)
+				outfile<<affinity[i][j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
+
 		cout<<"Diagonal matrix: \n";
 		for(int i=0;i<diagonal_matr.size();i++)
 		{
@@ -111,6 +128,17 @@ public:
 				cout<<diagonal_matr[i][j]<<" ";
 			cout<<endl;
 		}
+
+		outfile.open("diagonal.txt");
+		outfile<<"Diagonal matrix: \n";
+		for(int i=0;i<diagonal_matr.size();i++)
+		{
+			for(int j=0;j<diagonal_matr[i].size();j++)
+				outfile<<diagonal_matr[i][j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
+
 		cout<<"Laplacian matrix: \n";
 		for(int i=0;i<laplacian.size();i++)
 		{
@@ -118,6 +146,16 @@ public:
 				cout<<laplacian[i][j]<<" ";
 			cout<<endl;
 		}
+
+		outfile.open("laplacian.txt");
+		outfile<<"Laplacian matrix: \n";
+		for(int i=0;i<laplacian.size();i++)
+		{
+			for(int j=0;j<laplacian[i].size();j++)
+				outfile<<laplacian[i][j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
 	}
 
 	void printEigen()
@@ -142,6 +180,30 @@ public:
 				cout<<eig_pairs[i].second[j]<<" ";
 			cout<<endl;
 		}
+
+		ofstream outfile;
+		outfile.open("eigen.txt");
+		outfile<<"Eigen values are: \n";
+		for(int i=0;i<eigvalues.size();i++)
+			outfile<<eigvalues[i]<<" ";
+		outfile<<endl;
+
+		outfile<<"Eigen vectors are: \n";
+		for(int i=0;i<eigvectors.size();i++)
+		{
+			for(int j=0;j<eigvectors[i].size();j++)
+				outfile<<eigvectors[i][j]<<" ";
+			outfile<<endl;
+		}
+
+		outfile<<"K largest eigen vectors are: \n";
+		for(int i=0;i<k;i++)
+		{
+			for(int j=0;j<eig_pairs[i].second.size();j++)
+				outfile<<eig_pairs[i].second[j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
 	}
 
 	/* calculates all eigen values and eigen vectors of laplacian */
@@ -179,8 +241,8 @@ public:
 		}
 
 		end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to calculate eigenvalues and eigenvectors: "<<time_taken<<" sec\n";
+		eigen_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to calculate eigenvalues and eigenvectors: "<<time_taken<<" sec\n";
 	}
 
 	/* sort eigenvectors according to eigen values */
@@ -195,8 +257,8 @@ public:
 		sort(eig_pairs.rbegin(),eig_pairs.rend());
 
 		end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to sort eigenvectors: "<<time_taken<<" sec\n";
+		eigen_sort_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to sort eigenvectors: "<<time_taken<<" sec\n";
 	}
 
 	void kmeans_aux(int iters)
@@ -261,8 +323,31 @@ public:
         myfile.close();
 
         end=clock();
-		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-		cout<<"Time taken to do K-means clustering: "<<time_taken<<" sec\n";
+		kmeans_time = double(end-start)/double(CLOCKS_PER_SEC);
+		// cout<<"Time taken to do K-means clustering: "<<time_taken<<" sec\n";
+	}
+
+	void printFuncTimes(double total_time)
+	{
+		cout<<"Time taken to calculate affinity matrix: "<<affinity_time<<" sec\n";
+		cout<<"Time taken to calculate diagonal matrix: "<<diagonal_time<<" sec\n";
+		cout<<"Time taken to calculate laplacian matrix: "<<laplacian_time<<" sec\n";
+		cout<<"Time taken to calculate eigenvalues and eigenvectors: "<<eigen_time<<" sec\n";
+		cout<<"Time taken to sort eigenvectors: "<<eigen_sort_time<<" sec\n";
+		cout<<"Time taken to do K-means clustering: "<<kmeans_time<<" sec\n";
+		cout<<"Time taken to run complete code: "<<total_time<<" sec\n";
+
+		ofstream outfile;
+		outfile.open("timer.txt");
+		outfile<<"Time taken to calculate affinity matrix: "<<affinity_time<<" sec\n";
+		outfile<<"Time taken to calculate diagonal matrix: "<<diagonal_time<<" sec\n";
+		outfile<<"Time taken to calculate laplacian matrix: "<<laplacian_time<<" sec\n";
+		outfile<<"Time taken to calculate eigenvalues and eigenvectors: "<<eigen_time<<" sec\n";
+		outfile<<"Time taken to sort eigenvectors: "<<eigen_sort_time<<" sec\n";
+		outfile<<"Time taken to do K-means clustering: "<<kmeans_time<<" sec\n";
+		outfile<<"Time taken to run complete code: "<<total_time<<" sec\n";
+
+		outfile.close();
 	}
 };
 
@@ -322,8 +407,9 @@ int main(int argc, char **argv)
 
 	end=clock();
 	double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
-	cout<<"Time taken to run complete code: "<<time_taken<<" sec\n";
 
+	njw->printFuncTimes(time_taken);
+	
 	return 0;
 }
 

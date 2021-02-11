@@ -27,7 +27,7 @@ public:
 	{
 		points = v;
 		k = K;
-		dim = d; // initial setting
+		dim = d;
 	}
 
 	void setDimension(int d)
@@ -118,7 +118,6 @@ public:
 			affinity[i][i]=0;
 		}
 
-		printMatrices();
 		end=clock();
 		affinity_time = double(end-start)/double(CLOCKS_PER_SEC);
 		// cout<<"Time taken to calculate affinity matrix: "<<time_taken<<" sec\n";
@@ -170,6 +169,7 @@ public:
 		// cout<<"Time taken to calculate laplacian matrix: "<<time_taken<<" sec\n";
 	}
 
+	/* prints the affinity, diagonal and laplacian matrix into respective files */
 	void printMatrices()
 	{
 		cout<<"Affinity matrix: \n";
@@ -190,43 +190,44 @@ public:
 		}
 		outfile.close();
 
-		// cout<<"Diagonal matrix: \n";
-		// for(int i=0;i<diagonal_matr.size();i++)
-		// {
-		// 	for(int j=0;j<diagonal_matr[i].size();j++)
-		// 		cout<<diagonal_matr[i][j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"Diagonal matrix: \n";
+		for(int i=0;i<diagonal_matr.size();i++)
+		{
+			for(int j=0;j<diagonal_matr[i].size();j++)
+				cout<<diagonal_matr[i][j]<<" ";
+			cout<<endl;
+		}
 
-		// outfile.open("diagonal.txt");
-		// outfile<<"Diagonal matrix: \n";
-		// for(int i=0;i<diagonal_matr.size();i++)
-		// {
-		// 	for(int j=0;j<diagonal_matr[i].size();j++)
-		// 		outfile<<diagonal_matr[i][j]<<" ";
-		// 	outfile<<endl;
-		// }
-		// outfile.close();
+		outfile.open("diagonal.txt");
+		outfile<<"Diagonal matrix: \n";
+		for(int i=0;i<diagonal_matr.size();i++)
+		{
+			for(int j=0;j<diagonal_matr[i].size();j++)
+				outfile<<diagonal_matr[i][j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
 
-		// cout<<"Laplacian matrix: \n";
-		// for(int i=0;i<laplacian.size();i++)
-		// {
-		// 	for(int j=0;j<laplacian[i].size();j++)
-		// 		cout<<laplacian[i][j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"Laplacian matrix: \n";
+		for(int i=0;i<laplacian.size();i++)
+		{
+			for(int j=0;j<laplacian[i].size();j++)
+				cout<<laplacian[i][j]<<" ";
+			cout<<endl;
+		}
 
-		// outfile.open("laplacian.txt");
-		// outfile<<"Laplacian matrix: \n";
-		// for(int i=0;i<laplacian.size();i++)
-		// {
-		// 	for(int j=0;j<laplacian[i].size();j++)
-		// 		outfile<<laplacian[i][j]<<" ";
-		// 	outfile<<endl;
-		// }
-		// outfile.close();
+		outfile.open("laplacian.txt");
+		outfile<<"Laplacian matrix: \n";
+		for(int i=0;i<laplacian.size();i++)
+		{
+			for(int j=0;j<laplacian[i].size();j++)
+				outfile<<laplacian[i][j]<<" ";
+			outfile<<endl;
+		}
+		outfile.close();
 	}
 
+	/* prints the eigenvalues and eigenvectors into respective files */
 	void printEigen()
 	{
 		cout<<"Eigen values are: \n";
@@ -330,6 +331,7 @@ public:
 		// cout<<"Time taken to sort eigenvectors: "<<time_taken<<" sec\n";
 	}
 
+	/* applies the k-means algorithm on the normalized matrix of eigenvectors */
 	void kmeans_aux(int iters)
 	{
 		clock_t start, end;
@@ -396,6 +398,7 @@ public:
 		// cout<<"Time taken to do K-means clustering: "<<time_taken<<" sec\n";
 	}
 
+	/* prints the running time for all the steps of the algorithm */
 	void printFuncTimes(double total_time)
 	{
 		cout<<"Time taken to calculate affinity matrix: "<<affinity_time<<" sec\n";
@@ -469,11 +472,11 @@ int main(int argc, char **argv)
 	njw->populateAffinity();
 	njw->populateDiagonal();
 	njw->populateLaplacian();
-	// njw->printMatrices();
+	njw->printMatrices();
 
 	njw->getEigenVectors();
 	njw->sortEigen();
-	// njw->printEigen();
+	njw->printEigen();
 	njw->kmeans_aux(100);
 
 	end=clock();

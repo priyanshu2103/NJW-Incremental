@@ -21,6 +21,7 @@ private:
 	double eigen_time;
 	double eigen_sort_time;
 	double kmeans_time;
+	map<int,int> IdToCluster;
 
 public:
 	NJW(vector<vector<double> >v, int K, int d)
@@ -372,19 +373,30 @@ public:
 
 	    ofstream myfile;
         myfile.open("output.csv");
-        myfile << "x,y,c" << endl;
 
-        for(int i=0; i<k; i++)
+        for(int i=0;i<k;i++)
         {
-            // cout<<"Points in cluster "<<clusters[i].getId()<<" : ";
-            for(int j=0; j<clusters[i].getSize(); j++)
+        	for(int j=0; j<clusters[i].getSize(); j++)
             {
-            	for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
-            	{
-            		myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
-            	}
-                myfile << clusters[i].getId() << endl;
+            	// for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
+            	// {
+            		// myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
+            		IdToCluster[clusters[i].getPoint(j).getID()]=clusters[i].getId();
+            		// cout<<clusters[i].getPoint(j).getID()<<" "<<clusters[i].getId()<<endl;
+            	// }
+                // myfile << clusters[i].getId() << endl;
             }
+        }
+
+        for(auto it=IdToCluster.begin();it!=IdToCluster.end();it++)
+        {
+        	int id=it->first;
+        	for(int m=0;m<points[id].size();m++)
+        	{
+        		myfile << points[id][m] << ",";
+        	}
+        	myfile << it->second << endl;
+        	cout<<it->first<<" "<<it->second<<endl;
         }
 
         // for(int i=0;i<) 

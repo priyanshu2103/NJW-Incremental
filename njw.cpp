@@ -1,15 +1,13 @@
-#include <bits/stdc++.h>
-#include "kmeans.cpp"								/* used an implementation provided by https://github.com/aditya1601/kmeans-clustering-cpp.git*/
-#include <eigen3/Eigen/Eigenvalues>					/* eigen3 lib installed using sudo apt-get install libeigen3-dev */
-#include <eigen3/Eigen/Core>
-#include "Spectra/SymEigsSolver.h"
+#include<bits/stdc++.h>
+#include"kmeans.cpp"								/* used an implementation provided by https://github.com/aditya1601/kmeans-clustering-cpp.git*/
+#include<eigen3/Eigen/Eigenvalues>					/* eigen3 lib installed using sudo apt-get install libeigen3-dev */
 using namespace std;
-using namespace Spectra;
+
 
 class NJW
 {
 private:
-	vector< vector <double>> affinity;
+	vector<vector<double>> affinity;
 	vector<vector<double>> points;
 	vector<vector<double>> diagonal_matr;
 	vector<vector<double>> laplacian;
@@ -18,19 +16,34 @@ private:
 	vector<pair<double,vector<double>>> eig_pairs; /* stores eigenvalue and it's correspongding eigenvector */
 	int k;
 	int dim;
+	int iters;
+	double sigma;
 	double affinity_time;
 	double laplacian_time;
 	double diagonal_time;
 	double eigen_time;
 	double eigen_sort_time;
 	double kmeans_time;
+	map<int,int> IdToCluster;
 
 public:
-	NJW(vector<vector<double> >v, int K, int d)
+	NJW(vector<vector<double> >v, int K, int d, double s, int its)
 	{
 		points = v;
 		k = K;
 		dim = d;
+		sigma = s;
+		iters = its;
+	}
+
+	void setIters(int it)
+	{
+		iters = it;
+	}
+
+	int getIters()
+	{
+		return iters;
 	}
 
 	void setDimension(int d)
@@ -41,6 +54,91 @@ public:
 	int getDimension()
 	{
 		return dim;
+	}
+
+	int getNumPoints()
+	{
+		return points.size();
+	}
+
+	void setSigma(double s)
+	{
+		sigma = s;
+	}
+
+	int getSigma()
+	{
+		return sigma;
+	}
+
+	vector<vector<double> > getAffinity()
+	{
+		return affinity;
+	}
+
+	vector<vector<double> > getDiagonal()
+	{
+		return diagonal_matr;
+	}
+
+	vector<vector<double> > getLaplacian()
+	{
+		return laplacian;
+	}
+
+	vector<vector<double> > getPoints()
+	{
+		return points;
+	}
+
+	vector<vector<double> > getEigVectors()
+	{
+		return eigvectors;
+	}
+
+	vector<double> getEigValues()
+	{
+		return eigvalues;
+	}
+
+	int getK()
+	{
+		return k;
+	}
+
+	void setAffinity(vector<vector<double> > v)
+	{
+		affinity = v;
+	}
+
+	void setDiagonal(vector<vector<double> > v)
+	{
+		diagonal_matr = v;
+	}
+
+	void setLaplacian(vector<vector<double> > v)
+	{
+		laplacian = v;
+	}
+
+	void setPoints(vector<vector<double> > v)
+	{
+		points = v;
+	}
+
+	void setEigVectors(vector<vector<double> > v)
+	{
+		eigvectors = v;
+	}
+
+	void setEigValues(vector<double> v)
+	{
+		eigvalues = v;
+	}
+
+	void setK(int new_k)
+	{
+		k = new_k;
 	}
 	/* calculates the affinity between data points */
 	void populateAffinity()
@@ -53,59 +151,6 @@ public:
 		for(int i=0;i<n;i++)
 			affinity[i].resize(n,0);
 
-		// vector<double> mean(dim, 0);
-		// vector<double> maxs(dim, -1);
-
-		// for(int i=0;i<n;i++)
-		// {
-		// 	for(int l=0;l<dim;l++)
-		// 	{
-		// 		mean[l] += points[i][l]/n;
-		// 		maxs[l] = max(maxs[l], points[i][l]);
-		// 	}
-		// }
-
-		// for(int i=0;i<n;i++)
-		// {
-		// 	for(int l=0;l<dim;l++)
-		// 	{
-		// 		points[i][l] -= mean[l];
-		// 		points[i][l] /= maxs[l];
-		// 	}
-		// }
-
-		// vector<double >sigma(n);
-		// for(int i=0;i<points.size();i++)
-		// {
-		// 	priority_queue<double, vector<double>, greater<double> > pq;
-		// 	for(int j=0;j<points.size();j++)
-		// 	{
-		// 		double dist = 0;
-		// 		for(int l=0;l<dim;l++)
-		// 		{
-		// 			dist += pow(points[i][l]-points[j][l],2);
-		// 		}
-		// 		affinity[i][j]=dist;
-		// 		pq.push(dist);
-		// 	}
-		// 	affinity[i][i]=0;
-		// 	double si = 0;
-		// 	for(int l=0;l<k;l++)
-		// 	{
-		// 		si += sqrt(pq.top());
-		// 		pq.pop();
-		// 	}
-
-		// 	si /= k;
-		// 	sigma[i] = si;
-		// }
-
-		// for(int i=0;i<n;i++)
-		// {
-		// 	cout<<sigma[i]<<endl;
-		// }
-		// printMatrices();
-		double sigma=1;
 		for(int i=0;i<points.size();i++)
 		{
 			for(int j=0;j<points.size();j++)
@@ -175,13 +220,14 @@ public:
 	/* prints the affinity, diagonal and laplacian matrix into respective files */
 	void printMatrices()
 	{
-		// cout<<"Affinity matrix: \n";
-		// for(int i=0;i<points.size();i++)
-		// {
-		// 	for(int j=0;j<points.size();j++)
-		// 		cout<<affinity[i][j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"Affinity matrix: \n";
+		for(int i=0;i<points.size();i++)
+		{
+			for(int j=0;j<points.size();j++)
+				cout<<affinity[i][j]<<" ";
+			cout<<endl;
+		}
+		
 		ofstream outfile;
 		outfile.open("affinity.txt");
 		outfile<<"Affinity matrix: \n";
@@ -193,13 +239,13 @@ public:
 		}
 		outfile.close();
 
-		// cout<<"Diagonal matrix: \n";
-		// for(int i=0;i<diagonal_matr.size();i++)
-		// {
-		// 	for(int j=0;j<diagonal_matr[i].size();j++)
-		// 		cout<<diagonal_matr[i][j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"Diagonal matrix: \n";
+		for(int i=0;i<diagonal_matr.size();i++)
+		{
+			for(int j=0;j<diagonal_matr[i].size();j++)
+				cout<<diagonal_matr[i][j]<<" ";
+			cout<<endl;
+		}
 
 		outfile.open("diagonal.txt");
 		outfile<<"Diagonal matrix: \n";
@@ -211,13 +257,13 @@ public:
 		}
 		outfile.close();
 
-		// cout<<"Laplacian matrix: \n";
-		// for(int i=0;i<laplacian.size();i++)
-		// {
-		// 	for(int j=0;j<laplacian[i].size();j++)
-		// 		cout<<laplacian[i][j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"Laplacian matrix: \n";
+		for(int i=0;i<laplacian.size();i++)
+		{
+			for(int j=0;j<laplacian[i].size();j++)
+				cout<<laplacian[i][j]<<" ";
+			cout<<endl;
+		}
 
 		outfile.open("laplacian.txt");
 		outfile<<"Laplacian matrix: \n";
@@ -233,10 +279,10 @@ public:
 	/* prints the eigenvalues and eigenvectors into respective files */
 	void printEigen()
 	{
-		// cout<<"Eigen values are: \n";
-		// for(int i=0;i<eigvalues.size();i++)
-		// 	cout<<eigvalues[i]<<" ";
-		// cout<<endl;
+		cout<<"Eigen values are: \n";
+		for(int i=0;i<eigvalues.size();i++)
+			cout<<eigvalues[i]<<" ";
+		cout<<endl;
 
 		cout<<"Eigen vectors are: \n";
 		for(int i=0;i<eigvectors.size();i++)
@@ -246,20 +292,20 @@ public:
 			cout<<endl;
 		}
 
-		// cout<<"K largest eigen vectors are: \n";
-		// for(int i=0;i<k;i++)
-		// {
-		// 	for(int j=0;j<eig_pairs[i].second.size();j++)
-		// 		cout<<eig_pairs[i].second[j]<<" ";
-		// 	cout<<endl;
-		// }
+		cout<<"K largest eigen vectors are: \n";
+		for(int i=0;i<k;i++)
+		{
+			for(int j=0;j<eig_pairs[i].second.size();j++)
+				cout<<eig_pairs[i].second[j]<<" ";
+			cout<<endl;
+		}
 
 		ofstream outfile;
 		outfile.open("eigen.txt");
-		// outfile<<"Eigen values are: \n";
-		// for(int i=0;i<eigvalues.size();i++)
-		// 	outfile<<eigvalues[i]<<" ";
-		// outfile<<endl;
+		outfile<<"Eigen values are: \n";
+		for(int i=0;i<eigvalues.size();i++)
+			outfile<<eigvalues[i]<<" ";
+		outfile<<endl;
 
 		outfile<<"Eigen vectors are: \n";
 		for(int i=0;i<eigvectors.size();i++)
@@ -269,13 +315,13 @@ public:
 			outfile<<endl;
 		}
 
-		// outfile<<"K largest eigen vectors are: \n";
-		// for(int i=0;i<k;i++)
-		// {
-		// 	for(int j=0;j<eig_pairs[i].second.size();j++)
-		// 		outfile<<eig_pairs[i].second[j]<<" ";
-		// 	outfile<<endl;
-		// }
+		outfile<<"K largest eigen vectors are: \n";
+		for(int i=0;i<k;i++)
+		{
+			for(int j=0;j<eig_pairs[i].second.size();j++)
+				outfile<<eig_pairs[i].second[j]<<" ";
+			outfile<<endl;
+		}
 		outfile.close();
 	}
 
@@ -296,64 +342,34 @@ public:
 				A(i, j) = laplacian[i][j];
 			}
 		}
+		// Eigen::Matrix<double, n, n> A = laplacian;
+		Eigen::EigenSolver<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>> s(A); // the instance s includes the eigensystem
+		for(int i=0;i<n;i++)
+			eigvalues.push_back(real(s.eigenvalues()(i)));
 
-		DenseSymMatProd<double> op(A);
+		// cout<<s.eigenvectors()<<endl;
+		// cout<<s.eigenvectors().shape();
 
-    // Construct eigen solver object, requesting the largest three eigenvalues
-    SymEigsSolver<DenseSymMatProd<double>> eigs(op, k, 3*k); // 1 is arbitrary, k is for k evectors
-
-    // Initialize and compute
-    eigs.init();
-    int nconv = eigs.compute(SortRule::LargestAlge);
-
-    // Retrieve results
-    Eigen::MatrixXd evectors;
-    if(eigs.info() == CompInfo::Successful)
-        evectors = eigs.eigenvectors();
-
-    cout << "Eigenvectors found:\n" << evectors << endl;
-
-		eigvectors.resize(n, vector<double> (k));
 		for(int i=0;i<n;i++)
 		{
-			double sq_sum = 0;
-			for(int j=0;j<k;j++)
+			vector<double> temp;
+			double zs = 0;
+			for(int j=0;j<n;j++)
 			{
-				eigvectors[i][j] = evectors(i, j);
-				sq_sum += pow(evectors(i, j), 2);
+				double z =real(s.eigenvectors().col(i)(j));
+				temp.push_back(z);
+				zs += z*z;
 			}
-			for(int j=0;j<k;j++)
+
+			zs = sqrt(zs);
+			for(int j=0;j<n;j++)
 			{
-				eigvectors[i][j] /= sq_sum;
+				temp[j] /= zs;
 			}
+
+
+			eigvectors.push_back(temp);
 		}
-
-		// eig_pairs.clear();
-		// for(int i=0;i<eigvalues.size();i++)
-		// 	eig_pairs.push_back({abs(eigvalues[i]),eigvectors[i]});
-		Eigen::VectorXd evalues;
-    if(eigs.info() == CompInfo::Successful)
-        evalues = eigs.eigenvalues();
-
-    cout << "Eigenvalues found:\n" << evalues << endl;
-
-		// eigvectors = vector<vector<double> > (evectors);
-		// Eigen::Matrix<double, n, n> A = laplacian;
-		// Eigen::EigenSolver<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>> s(A); // the instance s includes the eigensystem
-		// for(int i=0;i<n;i++)
-		// 	eigvalues.push_back(real(s.eigenvalues()(i)));
-		//
-		// // cout<<s.eigenvectors()<<endl;
-		// // cout<<s.eigenvectors().shape();
-		//
-		// for(int i=0;i<n;i++)
-		// {
-		// 	vector<double> temp;
-		// 	for(int j=0;j<n;j++)
-		// 		temp.push_back(real(s.eigenvectors().col(i)(j)));
-		//
-		// 	eigvectors.push_back(temp);
-		// }
 
 		end=clock();
 		eigen_time = double(end-start)/double(CLOCKS_PER_SEC);
@@ -368,7 +384,7 @@ public:
 
 		eig_pairs.clear();
 		for(int i=0;i<eigvalues.size();i++)
-			eig_pairs.push_back({abs(eigvalues[i]),eigvectors[i]});
+			eig_pairs.push_back({eigvalues[i], eigvectors[i]});
 		sort(eig_pairs.rbegin(),eig_pairs.rend());
 
 		end=clock();
@@ -377,68 +393,81 @@ public:
 	}
 
 	/* applies the k-means algorithm on the normalized matrix of eigenvectors */
-	void kmeans_aux(int iters)
+	void kmeans_aux()
 	{
 		clock_t start, end;
 		start=clock();
 
-		// vector<vector<double>> Y;
-		// int n=laplacian.size();
-		// for(int i=0;i<n;i++)
-		// {
-		// 	vector<double> temp;
-		// 	for(int j=0;j<k;j++)
-		// 		temp.push_back(eig_pairs[j].second[i]);
-		//
-		// 	double sq_sum=0;
-		// 	for(int j=0;j<temp.size();j++)
-		// 		sq_sum+=pow(temp[j],2);
-		// 	sq_sum=sqrt(sq_sum);
-		// 	for(int j=0;j<temp.size();j++)
-		// 		temp[j]/=sq_sum;
-		//
-		// 	Y.push_back(temp);
-		// }
+		vector<vector<double>> Y;
+		int n=laplacian.size();
+		for(int i=0;i<n;i++)
+		{
+			vector<double> temp;
+			for(int j=0;j<k;j++)
+				temp.push_back(eig_pairs[j].second[i]);
+
+			double sq_sum=0;
+			for(int j=0;j<temp.size();j++)
+				sq_sum+=pow(temp[j],2);
+			sq_sum=sqrt(sq_sum);
+			for(int j=0;j<temp.size();j++)
+				temp[j]/=sq_sum;
+
+			Y.push_back(temp);
+		}
 
 		int pointId = 0;
 		vector<Point> all_points;
 
-		for(int i=0;i<eigvectors.size();i++)
+		for(int i=0;i<Y.size();i++)
 		{
-			Point point(pointId, eigvectors[i]);
+			Point point(pointId, Y[i]);
 			all_points.push_back(point);
 			pointId++;
-    }
+    	}
 
-    KMeans kmeans(k, iters);
-    vector<Cluster> clusters = kmeans.run(all_points);
+	    KMeans kmeans(k, iters);
+	    vector<Cluster> clusters = kmeans.run(all_points);
 
 
 
-    ofstream myfile;
-    myfile.open("output.csv");
-    myfile << "x,y,c" << endl;
+	    ofstream myfile;
+	    myfile.open("output.csv");
 
-    for(int i=0; i<k; i++)
-    {
-        // cout<<"Points in cluster "<<clusters[i].getId()<<" : ";
-        for(int j=0; j<clusters[i].getSize(); j++)
-        {
-        	for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
-        	{
-        		myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
-        	}
-            myfile << clusters[i].getId() << endl;
-        }
-    }
+		IdToCluster.clear();
 
-    // for(int i=0;i<)
-    // {
-    //     myfile << it->x << "," << it->y << "," << it->cluster << endl;
-    // }
-    myfile.close();
+	    for(int i=0;i<k;i++)
+	    {
+	    	for(int j=0; j<clusters[i].getSize(); j++)
+	        {
+	        	// for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
+	        	// {
+	        		// myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
+	        		IdToCluster[clusters[i].getPoint(j).getID()]=clusters[i].getId();
+	        		// cout<<clusters[i].getPoint(j).getID()<<" "<<clusters[i].getId()<<endl;
+	        	// }
+	            // myfile << clusters[i].getId() << endl;
+	        }
+	    }
 
-    end=clock();
+	    for(auto it=IdToCluster.begin();it!=IdToCluster.end();it++)
+	    {
+	    	int id=it->first;
+	    	for(int m=0;m<points[id].size();m++)
+	    	{
+	    		myfile << points[id][m] << ",";
+	    	}
+	    	myfile << it->second << endl;
+	    	cout<<it->first<<" "<<it->second<<endl;
+	    }
+
+	    // for(int i=0;i<)
+	    // {
+	    //     myfile << it->x << "," << it->y << "," << it->cluster << endl;
+	    // }
+	    myfile.close();
+
+    	end=clock();
 		kmeans_time = double(end-start)/double(CLOCKS_PER_SEC);
 		// cout<<"Time taken to do K-means clustering: "<<time_taken<<" sec\n";
 	}
@@ -466,6 +495,217 @@ public:
 
 		outfile.close();
 	}
+};
+
+
+class Incremental
+{
+private:
+	NJW *njw;
+
+public:
+	Incremental(NJW *nj)
+	{
+		njw = nj;
+	}
+
+	double matrMult(vector<double> x1, vector<vector<double> > L, vector<double> x2) // (x1T)L(x2)
+	{
+		vector<double> temp;
+		for(int i=0;i<L.size();i++)
+		{
+			double s = 0;
+			for(int j=0;j<L[i].size();j++)
+			{
+				s += L[i][j] * x2[j];
+			}
+			temp.push_back(s);
+		}
+
+		double res = 0;
+		for(int i=0;i<x1.size();i++)
+		{
+			res += x1[i] * temp[i];
+		}
+
+		return res;
+	}
+
+	vector<double> addVectors(vector<double> v1, vector<double> v2)
+	{
+		vector<double> sum(v1.size());
+		for(int i=0;i<v1.size();i++)
+		{
+			sum[i] = v1[i] + v2[i];
+		}
+
+		return sum;
+	}
+
+	vector<double> scalarMult(vector<double> v, double f)
+	{
+		vector<double> res(v.size());
+		for(int i=0;i<v.size();i++)
+		{
+			res[i] = f*v[i];
+		}
+		return res;
+	}
+
+	void updateEigs(vector<double> &old_eigvalues, vector<vector<double> > &old_eigvectors, vector<vector<double> > delta_l)
+	{
+		int N = old_eigvalues.size(); // N = n+1
+		vector<double> new_eigvalues(N);
+		vector<vector<double> > new_eigvectors(N, vector<double> (N));
+
+		for(int i=0;i<N;i++)
+		{
+			new_eigvalues[i] = old_eigvalues[i] + matrMult(old_eigvectors[i], delta_l, old_eigvectors[i]);
+		}
+
+		for(int i=0;i<N;i++)
+		{
+			new_eigvectors[i] = old_eigvectors[i];
+			vector<double> temp_vec(N);
+			for(int j=0;j<N;j++)
+			{
+				if(j == i) continue;
+				new_eigvectors[i] = addVectors(new_eigvectors[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, old_eigvectors[i])/(old_eigvalues[i] - old_eigvalues[j]))));
+			}
+		}
+
+		for(int i=0;i<N;i++)
+		{
+			double sum = 0;
+			for(int j=0;j<N;j++)
+			{
+				sum += new_eigvectors[i][j] * new_eigvectors[i][j];
+			}
+			sum = sqrt(sum);
+			for(int j=0;j<N;j++)
+			{
+				new_eigvectors[i][j] /= sum;
+			}
+		}
+		// since passed by reference
+		old_eigvalues = new_eigvalues;
+		old_eigvectors = new_eigvectors;
+	}
+
+	void insert(vector<double> pt)
+	{
+		int n = njw->getNumPoints();
+		vector<vector<double> > points = njw->getPoints();
+		points.push_back(pt); // This changes njw->getNumPoints()
+		njw->setPoints(points);
+
+		vector<double> dists;
+		double sigma = njw->getSigma();
+		double dist_sum = 0;
+		for(int i=0;i<n;i++)
+		{
+			double dist = 0;
+			for(int l=0;l<njw->getDimension();l++)
+			{
+				dist += pow(points[i][l]-pt[l],2);
+			}
+			double temp = exp(-dist / (2*sigma*sigma));
+			dists.push_back(temp);
+			dist_sum += temp;
+		}
+
+		vector<vector<double> > aff = njw->getAffinity();
+		for(int i=0;i<aff.size();i++)
+		{
+			aff[i].push_back(dists[i]);
+		}
+		aff.push_back(dists);
+		aff[aff.size()-1].push_back(0);
+
+		njw->setAffinity(aff);
+
+		vector<vector<double> > diag = njw->getDiagonal();
+		for(int i=0;i<n;i++)
+		{
+			diag[i][i] += dists[i];
+			diag[i].push_back(0);
+		}
+
+		vector<double> v_temp(n+1, 0);
+		v_temp[n] = dist_sum;
+		diag.push_back(v_temp);
+
+		njw->setDiagonal(diag);
+
+		vector<vector<double> > lapl_old = njw->getLaplacian();
+
+		vector<vector<double> > lapl(n+1, vector<double>(n+1));
+		for(int i=0;i<n+1;i++)
+		{
+			for(int j=0;j<n+1;j++)
+			{
+				lapl[i][j] = aff[i][j]/(sqrt(diag[i][i] * diag[j][j]));
+			}
+		}
+
+		njw->setLaplacian(lapl);
+		njw->printMatrices();
+
+		vector<vector<double> > delta_l = lapl;
+		for(int i=0;i<n;i++)
+		{
+			for(int j=0;j<n;j++)
+			{
+				delta_l[i][j] = lapl[i][j] - lapl_old[i][j];
+			}
+		}
+
+		Eigen::MatrixXd A(5,5);
+		A.resize(n+1, n+1);
+		for(int i=0;i<n;i++)
+		{
+			for(int j=0;j<n;j++)
+			{
+				A(i, j) = lapl_old[i][j];
+			}
+		}
+
+		for(int i=0;i<n;i++)
+		{
+			A(i, n) = 0;
+			A(n, i) = 0;
+		}
+
+		A(n, n) = 0;
+
+		Eigen::MatrixXd x = A.fullPivLu().kernel();
+
+		vector<double> eigvalues = njw->getEigValues();
+		vector<vector<double> > eigvectors = njw->getEigVectors();
+
+		eigvalues.push_back(0);
+		for(int i=0;i<n;i++)
+		{
+			eigvectors[i].push_back(0);
+		}
+		vector<double> temp_eig(n+1);
+		for(int i=0;i<n+1;i++)
+		{
+			temp_eig[i] = x(i, 0);
+		}
+
+		eigvectors.push_back(temp_eig);
+		updateEigs(eigvalues, eigvectors, delta_l);
+
+		njw->setEigValues(eigvalues);
+		njw->setEigVectors(eigvectors);
+
+		njw->sortEigen();
+		njw->printEigen();
+		njw->kmeans_aux();
+
+	}
+
 };
 
 int main(int argc, char **argv)
@@ -512,7 +752,7 @@ int main(int argc, char **argv)
     cout<<"\nData fetched successfully!"<<endl<<endl;
 
 	// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
-	NJW *njw = new NJW(points, K, d);
+	NJW *njw = new NJW(points, K, d, 1, 100);
 
 	njw->populateAffinity();
 	njw->populateDiagonal();
@@ -520,14 +760,21 @@ int main(int argc, char **argv)
 	njw->printMatrices();
 
 	njw->getEigenVectors();
-	// njw->sortEigen();
+	njw->sortEigen();
 	njw->printEigen();
-	njw->kmeans_aux(100);
+	njw->kmeans_aux();
 
 	end=clock();
 	double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
 
 	njw->printFuncTimes(time_taken);
+
+	// Incremental *inc = new Incremental(njw);
+	// vector<double> pt_new;
+	// pt_new.push_back(0);
+	// pt_new.push_back(0);
+
+	// inc->insert(pt_new);
 
 	return 0;
 }

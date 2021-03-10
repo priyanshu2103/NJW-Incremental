@@ -227,7 +227,7 @@ public:
 				cout<<affinity[i][j]<<" ";
 			cout<<endl;
 		}
-		
+
 		ofstream outfile;
 		outfile.open("affinity.txt");
 		outfile<<"Affinity matrix: \n";
@@ -330,6 +330,8 @@ public:
 	{
 		clock_t start, end;
 		start=clock();
+		eigvalues.clear();
+		eigvectors.clear();
 
 		int n=laplacian.size();
 		// Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A;
@@ -393,7 +395,7 @@ public:
 	}
 
 	/* applies the k-means algorithm on the normalized matrix of eigenvectors */
-	void kmeans_aux()
+	void kmeans_aux(string outfile)
 	{
 		clock_t start, end;
 		start=clock();
@@ -432,9 +434,9 @@ public:
 
 
 	    ofstream myfile;
-	    myfile.open("output.csv");
-
-		IdToCluster.clear();
+	    myfile.open(outfile);
+      myfile << "x,y,c"<<endl;
+			IdToCluster.clear();
 
 	    for(int i=0;i<k;i++)
 	    {
@@ -554,7 +556,7 @@ public:
 
 	void updateEigs(vector<double> &old_eigvalues, vector<vector<double> > &old_eigvectors, vector<vector<double> > delta_l)
 	{
-		int N = old_eigvalues.size(); // N = n+1
+		int N = old_eigvalues.size(); // N = n+1 for insert, n for update and remove
 		vector<double> new_eigvalues(N);
 		vector<vector<double> > new_eigvectors(N, vector<double> (N));
 
@@ -590,6 +592,56 @@ public:
 		// since passed by reference
 		old_eigvalues = new_eigvalues;
 		old_eigvectors = new_eigvectors;
+	}
+
+	int getClosestToZero(vector<double> eigvalues)
+	{
+		int index = 0;
+		double minDist;
+		minDist = abs(eigvalues[0]);
+		for(int i=1;i<eigvalues.size();i++)
+		{
+			if(abs(eigvalues[i]) < minDist)
+			{
+				minDist = abs(eigvalues[i]);
+				index = i;
+			}
+		}
+		return index;
+	}
+
+	void update(int index, vector<double> pt)
+	{
+		cout<<"Updating point "<<index<<endl;
+		int n = njw->getNumPoints();
+		vector<vector<double> > lapl_old = njw->getLaplacian();
+		vector<vector<double> > points = njw->getPoints();
+		points[index] = pt;
+		njw->setPoints(points);
+		njw->populateAffinity();
+		njw->populateDiagonal();
+		njw->populateLaplacian();
+		njw->printMatrices();
+		vector<vector<double> > delta_l = njw->getLaplacian();
+		for(int i=0;i<n;i++)
+		{
+			for(int j=0;j<n;j++)
+			{
+				delta_l[i][j] -= lapl_old[i][j];
+			}
+		}
+
+		vector<double> eigvalues = njw->getEigValues();
+		vector<vector<double> > eigvectors = njw->getEigVectors();
+
+		updateEigs(eigvalues, eigvectors, delta_l);
+
+		njw->setEigValues(eigvalues);
+		njw->setEigVectors(eigvectors);
+
+		njw->sortEigen();
+		njw->printEigen();
+		njw->kmeans_aux("output_update.csv");
 	}
 
 	void insert(vector<double> pt)
@@ -702,8 +754,56 @@ public:
 
 		njw->sortEigen();
 		njw->printEigen();
-		njw->kmeans_aux();
+		njw->kmeans_aux("output_insert.csv");
+	}
 
+	void remove(int index)
+	{
+		cout<<"Deleting point "<<index<<endl;
+		int n = njw->getNumPoints();
+		vector<vector<double> > lapl_old = njw->getLaplacian();
+		vector<vector<double> > points = njw->getPoints();
+		points.erase(points.begin() + index);
+		njw->setPoints(points);
+		njw->populateAffinity();
+		njw->populateDiagonal();
+		njw->populateLaplacian();
+		njw->printMatrices();
+		vector<vector<double> > delta_l = njw->getLaplacian();
+		for(int i=0;i<n-1;i++)
+		{
+			delta_l[i].insert(delta_l[i].begin() + index, 0);
+		}
+		vector<double> temp(n, 0);
+		delta_l.insert(delta_l.begin() + index, temp);
+
+		for(int i=0;i<n;i++)
+		{
+			for(int j=0;j<n;j++)
+			{
+				delta_l[i][j] -= lapl_old[i][j];
+			}
+		}
+		vector<double> eigvalues = njw->getEigValues();
+		vector<vector<double> > eigvectors = njw->getEigVectors();
+
+		updateEigs(eigvalues, eigvectors, delta_l);
+
+		int zero_id = getClosestToZero(eigvalues);
+		eigvectors.erase(eigvectors.begin() + zero_id);
+		eigvalues.erase(eigvalues.begin() + zero_id);
+
+		for(int i=0;i<n-1;i++)
+		{
+			eigvectors[i].erase(eigvectors[i].begin() + index);
+		}
+
+		njw->setEigValues(eigvalues);
+		njw->setEigVectors(eigvectors);
+
+		njw->sortEigen();
+		njw->printEigen();
+		njw->kmeans_aux("output_remove.csv");
 	}
 
 };
@@ -762,19 +862,29 @@ int main(int argc, char **argv)
 	njw->getEigenVectors();
 	njw->sortEigen();
 	njw->printEigen();
-	njw->kmeans_aux();
+	njw->kmeans_aux("output.csv");
 
 	end=clock();
 	double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
 
 	njw->printFuncTimes(time_taken);
 
-	// Incremental *inc = new Incremental(njw);
-	// vector<double> pt_new;
-	// pt_new.push_back(0);
-	// pt_new.push_back(0);
+	Incremental *inc = new Incremental(njw);
+	vector<double> pt_new;
+	pt_new.push_back(1);
+	pt_new.push_back(1);
 
 	// inc->insert(pt_new);
+  // inc->update(3, pt_new);
+	inc->remove(1);
+	// pt_new.push_back(39.9);
+	// pt_new.push_back(17.05);
+	//
+	// inc->insert(pt_new);
+	njw->getEigenVectors();
+	njw->sortEigen();
+	njw->printEigen();
+	njw->kmeans_aux("output.csv");
 
 	return 0;
 }

@@ -17,6 +17,8 @@ private:
 	int k;
 	int dim;
 	int iters;
+	string infile;
+	string type;
 	double sigma;
 	double affinity_time;
 	double laplacian_time;
@@ -27,13 +29,15 @@ private:
 	map<int,int> IdToCluster;
 
 public:
-	NJW(vector<vector<double> >v, int K, int d, double s, int its)
+	NJW(vector<vector<double> >v, int K, int d, double s, int its, string file)
 	{
 		points = v;
 		k = K;
 		dim = d;
 		sigma = s;
 		iters = its;
+		infile = file;
+		type = "static_orig";
 	}
 
 	void setIters(int it)
@@ -69,6 +73,16 @@ public:
 	int getSigma()
 	{
 		return sigma;
+	}
+
+	void setType(string s)
+	{
+		type = s;
+	}
+
+	string getType()
+	{
+		return type;
 	}
 
 	vector<vector<double> > getAffinity()
@@ -220,16 +234,16 @@ public:
 	/* prints the affinity, diagonal and laplacian matrix into respective files */
 	void printMatrices()
 	{
-		cout<<"Affinity matrix: \n";
-		for(int i=0;i<points.size();i++)
-		{
-			for(int j=0;j<points.size();j++)
-				cout<<affinity[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Affinity matrix: \n";
+		// for(int i=0;i<points.size();i++)
+		// {
+		// 	for(int j=0;j<points.size();j++)
+		// 		cout<<affinity[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
 		ofstream outfile;
-		outfile.open("affinity.txt");
+		outfile.open(type + "_" + infile + "_affinity.txt");
 		outfile<<"Affinity matrix: \n";
 		for(int i=0;i<points.size();i++)
 		{
@@ -239,15 +253,15 @@ public:
 		}
 		outfile.close();
 
-		cout<<"Diagonal matrix: \n";
-		for(int i=0;i<diagonal_matr.size();i++)
-		{
-			for(int j=0;j<diagonal_matr[i].size();j++)
-				cout<<diagonal_matr[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Diagonal matrix: \n";
+		// for(int i=0;i<diagonal_matr.size();i++)
+		// {
+		// 	for(int j=0;j<diagonal_matr[i].size();j++)
+		// 		cout<<diagonal_matr[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
-		outfile.open("diagonal.txt");
+		outfile.open(type + "_" + infile + "_diagonal.txt");
 		outfile<<"Diagonal matrix: \n";
 		for(int i=0;i<diagonal_matr.size();i++)
 		{
@@ -257,15 +271,15 @@ public:
 		}
 		outfile.close();
 
-		cout<<"Laplacian matrix: \n";
-		for(int i=0;i<laplacian.size();i++)
-		{
-			for(int j=0;j<laplacian[i].size();j++)
-				cout<<laplacian[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Laplacian matrix: \n";
+		// for(int i=0;i<laplacian.size();i++)
+		// {
+		// 	for(int j=0;j<laplacian[i].size();j++)
+		// 		cout<<laplacian[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
-		outfile.open("laplacian.txt");
+		outfile.open(type + "_" + infile + "_laplacian.txt");
 		outfile<<"Laplacian matrix: \n";
 		for(int i=0;i<laplacian.size();i++)
 		{
@@ -284,13 +298,13 @@ public:
 			cout<<eigvalues[i]<<" ";
 		cout<<endl;
 
-		cout<<"Eigen vectors are: \n";
-		for(int i=0;i<eigvectors.size();i++)
-		{
-			for(int j=0;j<eigvectors[i].size();j++)
-				cout<<eigvectors[i][j]<<" ";
-			cout<<endl;
-		}
+		// cout<<"Eigen vectors are: \n";
+		// for(int i=0;i<eigvectors.size();i++)
+		// {
+		// 	for(int j=0;j<eigvectors[i].size();j++)
+		// 		cout<<eigvectors[i][j]<<" ";
+		// 	cout<<endl;
+		// }
 
 		cout<<"K largest eigen vectors are: \n";
 		for(int i=0;i<k;i++)
@@ -301,7 +315,7 @@ public:
 		}
 
 		ofstream outfile;
-		outfile.open("eigen.txt");
+		outfile.open(type + "_" + infile + "_eigen.txt");
 		outfile<<"Eigen values are: \n";
 		for(int i=0;i<eigvalues.size();i++)
 			outfile<<eigvalues[i]<<" ";
@@ -395,8 +409,9 @@ public:
 	}
 
 	/* applies the k-means algorithm on the normalized matrix of eigenvectors */
-	void kmeans_aux(string outfile)
+	void kmeans_aux()
 	{
+		string outfile = type + "_" + infile + "_output.csv";
 		clock_t start, end;
 		start=clock();
 
@@ -441,15 +456,15 @@ public:
 	    for(int i=0;i<k;i++)
 	    {
 	    	for(int j=0; j<clusters[i].getSize(); j++)
-	        {
-	        	// for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
-	        	// {
-	        		// myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
-	        		IdToCluster[clusters[i].getPoint(j).getID()]=clusters[i].getId();
-	        		// cout<<clusters[i].getPoint(j).getID()<<" "<<clusters[i].getId()<<endl;
-	        	// }
-	            // myfile << clusters[i].getId() << endl;
-	        }
+        {
+        	// for(int m=0;m<points[clusters[i].getPoint(j).getID()].size();m++)
+        	// {
+        		// myfile << points[clusters[i].getPoint(j).getID()][m] << ",";
+        		IdToCluster[clusters[i].getPoint(j).getID()]=clusters[i].getId();
+        		// cout<<clusters[i].getPoint(j).getID()<<" "<<clusters[i].getId()<<endl;
+        	// }
+            // myfile << clusters[i].getId() << endl;
+        }
 	    }
 
 	    for(auto it=IdToCluster.begin();it!=IdToCluster.end();it++)
@@ -460,7 +475,7 @@ public:
 	    		myfile << points[id][m] << ",";
 	    	}
 	    	myfile << it->second << endl;
-	    	cout<<it->first<<" "<<it->second<<endl;
+	    	// cout<<it->first<<" "<<it->second<<endl;
 	    }
 
 	    // for(int i=0;i<)
@@ -486,7 +501,7 @@ public:
 		cout<<"Time taken to run complete code: "<<total_time<<" sec\n";
 
 		ofstream outfile;
-		outfile.open("timer.txt");
+		outfile.open(type + "_" + infile + "_timer.txt");
 		outfile<<"Time taken to calculate affinity matrix: "<<affinity_time<<" sec\n";
 		outfile<<"Time taken to calculate diagonal matrix: "<<diagonal_time<<" sec\n";
 		outfile<<"Time taken to calculate laplacian matrix: "<<laplacian_time<<" sec\n";
@@ -504,11 +519,13 @@ class Incremental
 {
 private:
 	NJW *njw;
+	int order;
 
 public:
-	Incremental(NJW *nj)
+	Incremental(NJW *nj, int ord)
 	{
 		njw = nj;
+		order = ord;
 	}
 
 	double matrMult(vector<double> x1, vector<vector<double> > L, vector<double> x2) // (x1T)L(x2)
@@ -554,44 +571,173 @@ public:
 		return res;
 	}
 
+	double dot_prod(vector<double> x1, vector<double> x2)
+	{
+		double sum = 0;
+		for(int i=0;i<x1.size();i++)
+		{
+			sum += x1[i] * x2[i];
+		}
+		return sum;
+	}
+
+	// void updateEigs_1(vector<double> &old_eigvalues, vector<vector<double> > &old_eigvectors, vector<vector<double> > delta_l)
+	// {
+	// 	int N = old_eigvalues.size(); // N = n+1 for insert, n for update and remove
+	// 	vector<double> new_eigvalues(N);
+	// 	vector<vector<double> > new_eigvectors(N, vector<double> (N));
+	//
+	// 	for(int i=0;i<N;i++)
+	// 	{
+	// 		new_eigvalues[i] = old_eigvalues[i] + matrMult(old_eigvectors[i], delta_l, old_eigvectors[i]);
+	// 	}
+	//
+	// 	for(int i=0;i<N;i++)
+	// 	{
+	// 		new_eigvectors[i] = old_eigvectors[i];
+	// 		vector<double> temp_vec(N);
+	// 		for(int j=0;j<N;j++)
+	// 		{
+	// 			if(j == i) continue;
+	// 			new_eigvectors[i] = addVectors(new_eigvectors[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, old_eigvectors[i])/(old_eigvalues[i] - old_eigvalues[j]))));
+	// 		}
+	// 	}
+	//
+	// 	for(int i=0;i<N;i++)
+	// 	{
+	// 		double sum = 0;
+	// 		for(int j=0;j<N;j++)
+	// 		{
+	// 			sum += new_eigvectors[i][j] * new_eigvectors[i][j];
+	// 		}
+	// 		sum = sqrt(sum);
+	// 		for(int j=0;j<N;j++)
+	// 		{
+	// 			new_eigvectors[i][j] /= sum;
+	// 		}
+	// 	}
+	// 	// since passed by reference
+	// 	old_eigvalues = new_eigvalues;
+	// 	old_eigvectors = new_eigvectors;
+	// }
+
 	void updateEigs(vector<double> &old_eigvalues, vector<vector<double> > &old_eigvectors, vector<vector<double> > delta_l)
 	{
-		int N = old_eigvalues.size(); // N = n+1 for insert, n for update and remove
-		vector<double> new_eigvalues(N);
-		vector<vector<double> > new_eigvectors(N, vector<double> (N));
-
-		for(int i=0;i<N;i++)
+		if(order == 1)
 		{
-			new_eigvalues[i] = old_eigvalues[i] + matrMult(old_eigvectors[i], delta_l, old_eigvectors[i]);
+			int N = old_eigvalues.size(); // N = n+1 for insert, n for update and remove
+			vector<double> new_eigvalues(N);
+			vector<vector<double> > new_eigvectors(N, vector<double> (N));
+
+			for(int i=0;i<N;i++)
+			{
+				new_eigvalues[i] = old_eigvalues[i] + matrMult(old_eigvectors[i], delta_l, old_eigvectors[i]);
+			}
+
+			for(int i=0;i<N;i++)
+			{
+				new_eigvectors[i] = old_eigvectors[i];
+				vector<double> temp_vec(N);
+				for(int j=0;j<N;j++)
+				{
+					if(j == i) continue;
+					new_eigvectors[i] = addVectors(new_eigvectors[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, old_eigvectors[i])/(old_eigvalues[i] - old_eigvalues[j]))));
+				}
+			}
+
+			for(int i=0;i<N;i++)
+			{
+				double sum = 0;
+				for(int j=0;j<N;j++)
+				{
+					sum += new_eigvectors[i][j] * new_eigvectors[i][j];
+				}
+				sum = sqrt(sum);
+				for(int j=0;j<N;j++)
+				{
+					new_eigvectors[i][j] /= sum;
+				}
+			}
+			// since passed by reference
+			old_eigvalues = new_eigvalues;
+			old_eigvectors = new_eigvectors;
 		}
 
-		for(int i=0;i<N;i++)
+		else
 		{
-			new_eigvectors[i] = old_eigvectors[i];
-			vector<double> temp_vec(N);
-			for(int j=0;j<N;j++)
+			int N = old_eigvalues.size(); // N = n+1 for insert, n for update and remove
+			vector<double> new_eigvalues(N);
+			vector<vector<double> > new_eigvectors(N, vector<double> (N));
+
+			vector<double> delta_lambda(N, 0);
+			vector<double> delta_2_lambda(N, 0);
+
+			vector<vector<double> > delta_x(N, vector<double> (N, 0));
+			vector<vector<double> > delta_2_x(N, vector<double> (N, 0));
+
+			double start = clock();
+			for(int i=0;i<N;i++)
 			{
-				if(j == i) continue;
-				new_eigvectors[i] = addVectors(new_eigvectors[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, old_eigvectors[i])/(old_eigvalues[i] - old_eigvalues[j]))));
+				// delta_x[i] = old_eigvectors[i];
+				vector<double> temp_vec(N);
+				for(int j=0;j<N;j++)
+				{
+					if(j == i) continue;
+					delta_x[i] = addVectors(delta_x[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, old_eigvectors[i])/(old_eigvalues[i] - old_eigvalues[j]))));
+				}
 			}
+			double end = clock();
+			double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+			cout<<"for loop time "<<time_taken<<endl;
+			for(int i=0;i<N;i++)
+			{
+				delta_lambda[i] = matrMult(old_eigvectors[i], delta_l, old_eigvectors[i]);
+			}
+
+			for(int i=0;i<N;i++)
+			{
+				delta_2_lambda[i] = matrMult(old_eigvectors[i], delta_l, delta_x[i]) - delta_lambda[i] * dot_prod(old_eigvectors[i], delta_x[i]);
+			}
+
+			for(int i=0;i<N;i++)
+			{
+				// delta_x[i] = old_eigvectors[i];
+				vector<double> temp_vec(N);
+				for(int j=0;j<N;j++)
+				{
+					if(j == i)
+					{
+						delta_2_x[i] = addVectors(delta_2_x[i], scalarMult(old_eigvectors[j], -0.5 * dot_prod(delta_x[i], delta_x[i])));
+					}
+					else
+					{
+						delta_2_x[i] = addVectors(delta_2_x[i], scalarMult(old_eigvectors[j], (matrMult(old_eigvectors[j], delta_l, delta_x[i]) - delta_lambda[i] * dot_prod(old_eigvectors[j], delta_x[i]))/(old_eigvalues[i] - old_eigvalues[j])));
+					}
+				}
+			}
+
+			for(int i=0;i<N;i++)
+			{
+				new_eigvalues[i] = old_eigvalues[i] + delta_lambda[i] + delta_2_lambda[i];
+				new_eigvectors[i] = addVectors(old_eigvectors[i], addVectors(delta_x[i], delta_2_x[i]));
+
+				double sum = 0;
+				for(int j=0;j<N;j++)
+				{
+					sum += new_eigvectors[i][j] * new_eigvectors[i][j];
+				}
+				sum = sqrt(sum);
+				for(int j=0;j<N;j++)
+				{
+					new_eigvectors[i][j] /= sum;
+				}
+			}
+
+			// since passed by reference
+			old_eigvalues = new_eigvalues;
+			old_eigvectors = new_eigvectors;
 		}
 
-		for(int i=0;i<N;i++)
-		{
-			double sum = 0;
-			for(int j=0;j<N;j++)
-			{
-				sum += new_eigvectors[i][j] * new_eigvectors[i][j];
-			}
-			sum = sqrt(sum);
-			for(int j=0;j<N;j++)
-			{
-				new_eigvectors[i][j] /= sum;
-			}
-		}
-		// since passed by reference
-		old_eigvalues = new_eigvalues;
-		old_eigvectors = new_eigvectors;
 	}
 
 	int getClosestToZero(vector<double> eigvalues)
@@ -641,11 +787,12 @@ public:
 
 		njw->sortEigen();
 		njw->printEigen();
-		njw->kmeans_aux("output_update.csv");
+		njw->kmeans_aux();
 	}
 
 	void insert(vector<double> pt)
 	{
+		cout<<"Inserting point"<<endl;
 		int n = njw->getNumPoints();
 		vector<vector<double> > points = njw->getPoints();
 		points.push_back(pt); // This changes njw->getNumPoints()
@@ -754,7 +901,7 @@ public:
 
 		njw->sortEigen();
 		njw->printEigen();
-		njw->kmeans_aux("output_insert.csv");
+		njw->kmeans_aux();
 	}
 
 	void remove(int index)
@@ -803,34 +950,31 @@ public:
 
 		njw->sortEigen();
 		njw->printEigen();
-		njw->kmeans_aux("output_remove.csv");
+		njw->kmeans_aux();
 	}
 
 };
 
 int main(int argc, char **argv)
 {
-	clock_t start, end;
-	start=clock();
-	//Need 2 arguments (except filename) to run, else exit
-    if(argc != 3){
-        cout<<"Error: command-line argument count mismatch.";
-        return 1;
-    }
+		clock_t start, end;
+		start=clock();
 
     //Fetching number of clusters
-    int K = atoi(argv[2]);
+    int K = stoi(argv[2]);
 
     //Open file for fetching points
     string filename = argv[1];
     ifstream infile(filename.c_str());
 
-    if(!infile.is_open()){
+    if(!infile.is_open())
+		{
         cout<<"Error: Failed to open file."<<endl;
         return 1;
     }
 
     vector<vector<double> > points;
+		// vector<double> maxs(INT_MIN), mins(INT_MAX);
     //Fetching points from file
     string line;
 
@@ -839,52 +983,93 @@ int main(int argc, char **argv)
     {
     	if(line=="") break;
     	vector<double> vec;
-        stringstream is(line);
-        double val;
-        while(is >> val)
-        {
-            vec.push_back(val);
-        }
-        points.push_back(vec);
-        d = vec.size();
+      stringstream is(line);
+      double val;
+			// int idx = 0;
+      while(is >> val)
+      {
+				// maxs[idx] = max(maxs[idx], val);
+				// mins[idx] = max(mins[idx], val);
+				// idx++;
+				vec.push_back(val);
+      }
+      points.push_back(vec);
+      d = vec.size();
     }
     infile.close();
     cout<<"\nData fetched successfully!"<<endl<<endl;
 
-	// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
-	NJW *njw = new NJW(points, K, d, 1, 100);
+		int ord = stoi(argv[3]);
+		string oper = argv[4];
 
-	njw->populateAffinity();
-	njw->populateDiagonal();
-	njw->populateLaplacian();
-	njw->printMatrices();
+		// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
+		NJW *njw = new NJW(points, K, d, 1, 100, filename);
 
-	njw->getEigenVectors();
-	njw->sortEigen();
-	njw->printEigen();
-	njw->kmeans_aux("output.csv");
+		njw->populateAffinity();
+		njw->populateDiagonal();
+		njw->populateLaplacian();
+		njw->printMatrices();
 
-	end=clock();
-	double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		njw->getEigenVectors();
+		njw->sortEigen();
+		njw->printEigen();
+		njw->kmeans_aux();
 
-	njw->printFuncTimes(time_taken);
+		end=clock();
+		double time_taken = double(end-start)/double(CLOCKS_PER_SEC);
 
-	Incremental *inc = new Incremental(njw);
-	vector<double> pt_new;
-	pt_new.push_back(1);
-	pt_new.push_back(1);
+		njw->printFuncTimes(time_taken);
 
-	// inc->insert(pt_new);
-  // inc->update(3, pt_new);
-	inc->remove(1);
-	// pt_new.push_back(39.9);
-	// pt_new.push_back(17.05);
-	//
-	// inc->insert(pt_new);
-	njw->getEigenVectors();
-	njw->sortEigen();
-	njw->printEigen();
-	njw->kmeans_aux("output.csv");
+		Incremental *inc = new Incremental(njw, ord);
+		vector<double> pt_new;
 
-	return 0;
+		start = clock();
+		if(oper == "update")
+		{
+			njw->setType("update_" + to_string(ord));
+			int idx = stoi(argv[5]);
+			for(int i=0;i<d;i++)
+			{
+				pt_new.push_back(stod(argv[6+i]));
+			}
+			inc -> update(idx, pt_new);
+		}
+
+		else if(oper == "insert")
+		{
+			njw->setType("insert_" + to_string(ord));
+			for(int i=0;i<d;i++)
+			{
+				pt_new.push_back(stod(argv[5+i]));
+			}
+			inc -> insert(pt_new);
+		}
+
+		else
+		{
+			njw->setType("remove_" + to_string(ord));
+			int idx = stoi(argv[5]);
+			inc->remove(idx);
+		}
+		end = clock();
+		time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		njw->printFuncTimes(time_taken);
+		// inc->insert(pt_new);
+	  // inc->update(3, pt_new);
+		// inc->remove(1);
+		// pt_new.push_back(39.9);
+		// pt_new.push_back(17.05);
+		//
+		// inc->insert(pt_new);
+		start = clock();
+		njw->setType("static_new");
+		njw->getEigenVectors();
+		njw->sortEigen();
+		njw->printEigen();
+		njw->kmeans_aux();
+		end = clock();
+		time_taken = double(end-start)/double(CLOCKS_PER_SEC);
+		njw->printFuncTimes(time_taken);
+
+		return 0;
 }

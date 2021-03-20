@@ -974,7 +974,7 @@ int main(int argc, char **argv)
     }
 
     vector<vector<double> > points;
-		// vector<double> maxs(INT_MIN), mins(INT_MAX);
+		vector<double> maxs, mins;
     //Fetching points from file
     string line;
 
@@ -985,25 +985,47 @@ int main(int argc, char **argv)
     	vector<double> vec;
       stringstream is(line);
       double val;
-			// int idx = 0;
+			int idx = 0;
       while(is >> val)
       {
-				// maxs[idx] = max(maxs[idx], val);
-				// mins[idx] = max(mins[idx], val);
-				// idx++;
+				if(maxs.size()<=idx)
+				{
+					maxs.push_back(val);
+					mins.push_back(val);
+				}
+				else
+				{
+					maxs[idx] = max(maxs[idx], val);
+					mins[idx] = min(mins[idx], val);
+				}
+
+				idx++;
 				vec.push_back(val);
       }
       points.push_back(vec);
       d = vec.size();
     }
     infile.close();
+		int p = 1; // points.size() / 10;
+		vector<double> temp_added(d);
+		for(int i=0;i<d;i++)
+		{
+			temp_added[i] = 1.25*maxs[i]; //+ (maxs[i] - mins[i]);
+			cout<<maxs[i]<<" "<<mins[i]<<" "<<temp_added[i]<<endl;
+		}
+
+		for(int i=0;i<p;i++)
+		{
+			points.push_back(temp_added);
+		}
+
     cout<<"\nData fetched successfully!"<<endl<<endl;
 
 		int ord = stoi(argv[3]);
 		string oper = argv[4];
 
 		// = { {0,1},{1,2},{2,3},{38,48},{48,58} };
-		NJW *njw = new NJW(points, K, d, 1, 100, filename);
+		NJW *njw = new NJW(points, K , d, 1, 100, filename); // K + 1 because of extra added points
 
 		njw->populateAffinity();
 		njw->populateDiagonal();
@@ -1042,7 +1064,8 @@ int main(int argc, char **argv)
 			{
 				pt_new.push_back(stod(argv[5+i]));
 			}
-			inc -> insert(pt_new);
+			inc -> update(points.size() - 1, pt_new);
+			// inc -> insert(pt_new);
 		}
 
 		else
